@@ -1,0 +1,259 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <cmath>
+#include <algorithm>
+
+struct Profile {
+    std::string name;
+    std::string password;
+    int age;
+    std::string maritalStatus;
+    std::string gender;
+    std::string drinks;
+    std::string smokes;
+    std::string education;
+    std::string location;
+    int height; // in centimeters
+    double income; // in USD
+    std::string job;
+    int kids;
+    int pets;
+    std::string religion;
+    std::string zodiacSign;
+    std::vector<std::string> hobbies;
+};
+
+std::vector<Profile> profiles = {
+    // Sample profiles with autofilled criteria
+    {"Alice", "password1", 35, "Single", "Female", "Socially", "No", "Bachelor's Degree", "New York", 165, 80000, "Software Developer", 0, 1, "Agnostic", "Leo", {"Reading", "Traveling"}},
+    {"Bob", "password2", 40, "Divorced", "Male", "Occasionally", "No", "Master's Degree", "Los Angeles", 180, 90000, "Engineer", 2, 0, "Christian", "Libra", {"Cooking", "Hiking"}},
+    {"Eva", "password3", 32, "Single", "Female", "Socially", "No", "Ph.D.", "San Francisco", 170, 100000, "Data Scientist", 1, 0, "Atheist", "Gemini", {"Running", "Painting"}},
+    {"Charlie", "password4", 45, "Married", "Male", "No", "No", "High School Diploma", "Chicago", 175, 60000, "Truck Driver", 3, 2, "Christian", "Sagittarius", {"Fishing", "Gardening"}},
+    {"Olivia", "password5", 28, "Single", "Female", "Rarely", "No", "Bachelor's Degree", "Miami", 160, 70000, "Graphic Designer", 0, 1, "Agnostic", "Pisces", {"Photography", "Traveling"}},
+    {"Daniel", "password6", 36, "Married", "Male", "No", "No", "Master's Degree", "Chicago", 175, 95000, "Doctor", 2, 0, "Christian", "Scorpio", {"Cooking", "Reading"}},
+    {"Sophia", "password7", 31, "Single", "Female", "No", "No", "Bachelor's Degree", "Los Angeles", 163, 75000, "Marketing Manager", 0, 1, "Atheist", "Aquarius", {"Painting", "Yoga"}},
+    {"Liam", "password8", 37, "Married", "Male", "Socially", "No", "Bachelor's Degree", "Houston", 178, 88000, "Architect", 1, 1, "Christian", "Capricorn", {"Traveling", "Golf"}},
+    {"Ava", "password9", 29, "Divorced", "Female", "No", "No", "Bachelor's Degree", "Seattle", 162, 72000, "Interior Designer", 0, 1, "Agnostic", "Virgo", {"Cooking", "Dancing"}},
+    {"William", "password10", 42, "Married", "Male", "Socially", "No", "Ph.D.", "Boston", 183, 110000, "Professor", 2, 0, "Atheist", "Taurus", {"Reading", "Hiking"}},
+    {"Mia", "password11", 34, "Single", "Female", "No", "No", "Master's Degree", "San Diego", 168, 78000, "Software Engineer", 0, 2, "Agnostic", "Cancer", {"Photography", "Traveling"}},
+    {"James", "password12", 39, "Divorced", "Male", "Rarely", "No", "Bachelor's Degree", "Dallas", 179, 92000, "Financial Analyst", 1, 0, "Agnostic", "Libra", {"Cooking", "Fitness"}},
+    {"Chloe", "password13", 33, "Single", "Female", "Socially", "No", "Bachelor's Degree", "Miami", 165, 76000, "Journalist", 0, 1, "Agnostic", "Sagittarius", {"Writing", "Traveling"}},
+    {"Benjamin", "password14", 41, "Married", "Male", "Occasionally", "No", "Master's Degree", "San Francisco", 182, 100000, "Investment Banker", 2, 1, "Christian", "Leo", {"Tennis", "Traveling"}},
+    {"Emma", "password15", 30, "Single", "Female", "No", "No", "Bachelor's Degree", "New York", 164, 74000, "Event Planner", 0, 1, "Agnostic", "Gemini", {"Cooking", "Dancing"}}
+};
+
+int calculateMatchScore(const Profile& user, const Profile& candidate) {
+    int score = 0;
+    score += 100 - std::abs(user.age - candidate.age);
+    if (user.maritalStatus == candidate.maritalStatus) {
+        score += 10;
+    }
+    if (user.gender == candidate.gender) {
+        score += 10;
+    }
+    if (user.drinks == candidate.drinks) {
+        score += 10;
+    }
+    if (user.smokes == candidate.smokes) {
+        score += 10;
+    }
+    if (user.education == candidate.education) {
+        score += 10;
+    }
+    if (user.location == candidate.location) {
+        score += 10;
+    }
+    // Adjust score based on height difference (the smaller the difference, the better the match)
+    score += 100 - std::abs(user.height - candidate.height);
+    // Adjust score based on common hobbies
+    int commonHobbiesCount = 0;
+    for (const auto& userHobby : user.hobbies) {
+        for (const auto& candidateHobby : candidate.hobbies) {
+            if (userHobby == candidateHobby) {
+                commonHobbiesCount++;
+            }
+        }
+    }
+    score += commonHobbiesCount * 5; // Increase score for each common hobby
+
+    // Adjust score based on income compatibility (the closer the income, the better the match)
+    int incomeDifference = std::abs(user.income - candidate.income);
+    if (incomeDifference <= 10000) {
+        score += 20;
+    } else if (incomeDifference <= 20000) {
+        score += 10;
+    }
+
+    // Adjust score based on job compatibility (partial match for similar job titles)
+    if (user.job == candidate.job) {
+        score += 15;
+    } else {
+        // Check for partial job title match (e.g., "Engineer" matches "Software Engineer")
+        size_t found = candidate.job.find(user.job);
+        if (found != std::string::npos) {
+            score += 10;
+        }
+    }
+
+    // Adjust score based on number of children (prefer candidates with similar number of children)
+    score += 10 - std::abs(user.kids - candidate.kids);
+
+    // Adjust score based on pet preference
+    if (user.pets == candidate.pets) {
+        score += 10;
+    }
+
+    return score;
+}
+
+bool registerProfile(std::vector<Profile>& users) {
+    Profile newUser;
+    std::string name, password, maritalStatus, gender, drinks, smokes, education, location, job, religion, zodiacSign, hobby;
+
+    std::cout << "Enter your name: ";
+    std::cin >> name;
+    newUser.name = name;
+    std::cout << "Enter your password: ";
+    std::cin >> password;
+    newUser.password = password;
+    std::cout << "Enter your age: ";
+    std::cin >> newUser.age;
+    std::cout << "Enter your marital status (Single/Married/Divorced): ";
+    std::cin >> maritalStatus;
+    newUser.maritalStatus = maritalStatus;
+    std::cout << "Enter your gender (Male/Female): ";
+    std::cin >> gender;
+    newUser.gender = gender;
+    std::cout << "Do you drink? (Yes/No): ";
+    std::cin >> drinks;
+    newUser.drinks = drinks;
+    std::cout << "Do you smoke? (Yes/No): ";
+    std::cin >> smokes;
+    newUser.smokes = smokes;
+    std::cout << "Enter your education level: ";
+    std::cin >> education;
+    newUser.education = education;
+    std::cout << "Enter your location: ";
+    std::cin >> location;
+    newUser.location = location;
+    std::cout << "Enter your height (in centimeters): ";
+    std::cin >> newUser.height;
+    std::cout << "Enter your income (in USD): ";
+    std::cin >> newUser.income;
+    std::cout << "Enter your job: ";
+    std::cin >> job;
+    newUser.job = job;
+    std::cout << "Enter the number of kids: ";
+    std::cin >> newUser.kids;
+    std::cout << "Enter the number of pets: ";
+    std::cin >> newUser.pets;
+    std::cout << "Enter your religion: ";
+    std::cin >> religion;
+    newUser.religion = religion;
+    std::cout << "Enter your zodiac sign: ";
+    std::cin >> zodiacSign;
+    newUser.zodiacSign = zodiacSign;
+
+    std::cout << "Enter your hobbies (enter 'done' to finish): ";
+    while (true) {
+        std::cin >> hobby;
+        if (hobby == "done") {
+            break;
+        }
+        newUser.hobbies.push_back(hobby);
+    }
+
+    for (const auto& profile : users) {
+        if (profile.name == newUser.name) {
+            std::cout << "Profile with this name already exists. Please choose a different name." << std::endl;
+            return false;
+        }
+    }
+
+    users.push_back(newUser);
+    std::cout << "Registration successful!" << std::endl;
+    return true;
+}
+
+bool loginUser(const std::vector<Profile>& users, Profile& loggedInUser) {
+    std::string name, password;
+    std::cout << "Enter your name: ";
+    std::cin >> name;
+    std::cout << "Enter your password: ";
+    std::cin >> password;
+
+    for (const auto& user : users) {
+        if (user.name == name && user.password == password) {
+            loggedInUser = user;
+            return true;
+        }
+    }
+
+    std::cout << "Invalid username or password. Please try again." << std::endl;
+    return false;
+}
+
+int main() {
+    std::vector<Profile> users;
+    Profile loggedInUser;
+
+    while (true) {
+        std::cout << "Choose an option:" << std::endl;
+        std::cout << "1. Register" << std::endl;
+        std::cout << "2. Login" << std::endl;
+        std::cout << "3. Exit" << std::endl;
+
+        int choice;
+        std::cin >> choice;
+
+        switch (choice) {
+            case 1: {
+                if (registerProfile(users)) {
+                    std::cout << "Registration successful!" << std::endl;
+                } else {
+                    std::cout << "Registration failed. Please try again." << std::endl;
+                }
+                break;
+            }
+            case 2: {
+                if (loginUser(users, loggedInUser)) {
+                    std::cout << "Login successful! Welcome, " << loggedInUser.name << "!" << std::endl;
+                    std::vector<Profile> matches;
+
+                    std::cout << "Matching profiles for " << loggedInUser.name << ":" << std::endl;
+
+                    for (const auto& candidate : profiles) {
+                        if (candidate.name != loggedInUser.name) {
+                            int matchScore = calculateMatchScore(loggedInUser, candidate);
+                            std::cout << "Name: " << candidate.name << ", Match Score: " << matchScore << std::endl;
+                            matches.push_back(candidate);
+                        }
+                    }
+
+                    if (!matches.empty()) {
+                        auto bestMatch = std::max_element(matches.begin(), matches.end(), [&](const Profile& a, const Profile& b) {
+                            return calculateMatchScore(loggedInUser, a) < calculateMatchScore(loggedInUser, b);
+                        });
+
+                        std::cout << "Best match for profile '" << loggedInUser.name << "': " << bestMatch->name << ", Match Score: "
+                                  << calculateMatchScore(loggedInUser, *bestMatch) << std::endl;
+                    } else {
+                        std::cout << "No suitable matches found." << std::endl;
+                    }
+                }
+                break;
+            }
+            case 3: {
+                std::cout << "Exiting program. Goodbye!" << std::endl;
+                return 0;
+            }
+            default: {
+                std::cout << "Invalid choice. Please try again." << std::endl;
+                break;
+            }
+        }
+    }
+
+    return 0;
+}
